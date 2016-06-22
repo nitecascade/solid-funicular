@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+
+usage='"
+Usage: ${progname} -h
+       ${progname} conda-name [cmd [args]]
+
+Description
+    Start a subshell and activate the named conda environment from it. Without
+    a cmd to run, just start an interactive shell. With a cmd, run the cmd in
+    the subshell and terminate the subshell when it finishes.
+
+Args
+    -h              Show this help message and exit.
+    conda-name      Conda environment name.
+    cmd             Command to run in the named conda environment.
+    args            Args to pass to the command.
+
+Example
+    \$ ${progname} myenv
+    discarding /Users/fmachi/miniconda3/bin from PATH
+    prepending /Users/fmachi/miniconda3/envs/test/bin to PATH
+
+    (conda test)
+    -2- fmachi@Fs-MacBook-Pro 21:53:05 ~
+    442\$ 
+
+    \$ ${progname} myenv conda info -e
+    discarding /Users/fmachi/miniconda3/bin from PATH
+    prepending /Users/fmachi/miniconda3/envs/test/bin to PATH
+    # conda environments:
+    #
+    test                  *  /Users/fmachi/miniconda3/envs/test
+    root                     /Users/fmachi/miniconda3
+"'
+
+progname=$( basename "${0}" )
+msg () { echo "${progname}:" "${@}"; }
+errmsg () { msg "${@}" 2>&1; }
+
+unset errs
+while case ${#} in (0) break ;; esac
+do
+    case ${1} in
+    (--)
+        shift; break ;;
+    (-h|--help)
+        eval echo "${usage}"; exit ;;
+    (-*)
+        errmsg "unknown flag: ${1}"; errs= ;;
+    (*)
+        break ;;
+    esac
+    shift
+done
+
+# First arg is conda env name.
+case ${#} in
+(0)
+    errmsg "missing conda-name!"; errs= ;;
+(*)
+    CONDA_NAME=${1}; shift ;;
+esac
+
+case ${errs+isset} in
+(isset)
+    errmsg "aborting; run with -h for help"; exit 1 ;;
+esac
+
+export CONDA_NAME
+
+preamble='
+source activate '"${CONDA_NAME}"'
+CONDA_NAME=$(
+    conda info -e \
+    | awk '\''
+        BEGIN { scan = 0 }
+        /# conda environments:/ { scan = 1 }
+        scan && /^[^*]*[*]/ { sub(/[ \t]*[*].*$/, "", $0); name = $0; exit }
+        END { print name }
+        '\''
+    )
+export CONDA_NAME
+[ -f ~/.bashrc ] && source ~/.bashrc
+'
+
+# When there is a cmd run it from this script inside the conda env.
+cmd_script='
+'"${preamble}"'
+"${@}"
+exit
+'
+
+# When there is a no cmd start an interactive shell inside the conda env.
+rcfile_nocmd='
+'"${preamble}"'
+PS1="\n(conda ${CONDA_NAME})${PS1}"
+'
+
+case ${#} in
+(0)
+    # There was no command.
+    exec bash --rcfile <( echo "${rcfile_nocmd}" ) -i ;;
+(*)
+    # There was a command.
+    exec bash --norc -c "${cmd_script}" xx "${@}" ;;
+esac
