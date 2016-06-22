@@ -1,0 +1,33 @@
+{"shortname": "Arts", "sort_name": "Arts & Culture", "id": 1, "name": "Arts & Culture"}
+{"shortname": "Book Clubs", "sort_name": "Book Clubs", "id": 18, "name": "Book Clubs"}
+{"shortname": "Business", "sort_name": "Career & Business", "id": 2, "name": "Career & Business"}
+{"shortname": "Auto", "sort_name": "Cars & Motorcycles", "id": 3, "name": "Cars & Motorcycles"}
+{"shortname": "Community", "sort_name": "Community & Environment", "id": 4, "name": "Community & Environment"}
+{"shortname": "Dancing", "sort_name": "Dancing", "id": 5, "name": "Dancing"}
+{"shortname": "Education", "sort_name": "Education & Learning", "id": 6, "name": "Education & Learning"}
+{"shortname": "Fashion", "sort_name": "Fashion & Beauty", "id": 8, "name": "Fashion & Beauty"}
+{"shortname": "Fitness", "sort_name": "Fitness", "id": 9, "name": "Fitness"}
+{"shortname": "Food & Drink", "sort_name": "Food & Drink", "id": 10, "name": "Food & Drink"}
+{"shortname": "Games", "sort_name": "Games", "id": 11, "name": "Games"}
+{"shortname": "Movements", "sort_name": "Movements & Politics", "id": 13, "name": "Movements & Politics"}
+{"shortname": "Well-being", "sort_name": "Health & Wellbeing", "id": 14, "name": "Health & Wellbeing"}
+{"shortname": "Crafts", "sort_name": "Hobbies & Crafts", "id": 15, "name": "Hobbies & Crafts"}
+{"shortname": "Languages", "sort_name": "Language & Ethnic Identity", "id": 16, "name": "Language & Ethnic Identity"}
+{"shortname": "LGBT", "sort_name": "LGBT", "id": 12, "name": "LGBT"}
+{"shortname": "Lifestyle", "sort_name": "Lifestyle", "id": 17, "name": "Lifestyle"}
+{"shortname": "Films", "sort_name": "Movies & Film", "id": 20, "name": "Movies & Film"}
+{"shortname": "Music", "sort_name": "Music", "id": 21, "name": "Music"}
+{"shortname": "Spirituality", "sort_name": "New Age & Spirituality", "id": 22, "name": "New Age & Spirituality"}
+{"shortname": "Outdoors", "sort_name": "Outdoors & Adventure", "id": 23, "name": "Outdoors & Adventure"}
+{"shortname": "Paranormal", "sort_name": "Paranormal", "id": 24, "name": "Paranormal"}
+{"shortname": "Moms & Dads", "sort_name": "Parents & Family", "id": 25, "name": "Parents & Family"}
+{"shortname": "Pets", "sort_name": "Pets & Animals", "id": 26, "name": "Pets & Animals"}
+{"shortname": "Photography", "sort_name": "Photography", "id": 27, "name": "Photography"}
+{"shortname": "Beliefs", "sort_name": "Religion & Beliefs", "id": 28, "name": "Religion & Beliefs"}
+{"shortname": "Sci fi", "sort_name": "Sci-Fi & Fantasy", "id": 29, "name": "Sci-Fi & Fantasy"}
+{"shortname": "Singles", "sort_name": "Singles", "id": 30, "name": "Singles"}
+{"shortname": "Social", "sort_name": "Socializing", "id": 31, "name": "Socializing"}
+{"shortname": "Sports", "sort_name": "Sports & Recreation", "id": 32, "name": "Sports & Recreation"}
+{"shortname": "Support", "sort_name": "Support", "id": 33, "name": "Support"}
+{"shortname": "Tech", "sort_name": "Tech", "id": 34, "name": "Tech"}
+{"shortname": "Writing", "sort_name": "Writing", "id": 36, "name": "Writing"}
