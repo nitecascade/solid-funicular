@@ -2,7 +2,7 @@
 
 usage='"
 Usage: ${progname} -h
-       ${progname} conda-name [cmd [args]]
+       ${progname} [-e env-file] conda-name [cmd [args]]
 
 Description
     Start a subshell and activate the named conda environment from it. Without
@@ -11,6 +11,7 @@ Description
 
 Args
     -h              Show this help message and exit.
+    -e env-file     A shell file to source after setting up the conda env.
     conda-name      Conda environment name.
     cmd             Command to run in the named conda environment.
     args            Args to pass to the command.
@@ -38,11 +39,14 @@ msg () { echo "${progname}:" "${@}"; }
 errmsg () { msg "${@}" 2>&1; }
 
 unset errs
+unset env_file
 while case ${#} in (0) break ;; esac
 do
     case ${1} in
     (--)
         shift; break ;;
+    (-e)
+        shift; env_file=${1} ;;
     (-h|--help)
         eval echo "${usage}"; exit ;;
     (-*)
@@ -70,6 +74,7 @@ export CONDA_NAME
 
 preamble='
 source activate '"${CONDA_NAME}"'
+source '"${env_file:-/dev/null}"'
 CONDA_NAME=$(
     conda info -e \
     | awk '\''
