@@ -7,6 +7,9 @@ Conda commands to create the Python3.5 environment
     $ source activate capstone35
     $ pip install click
     $ conda install jinja2
+    $ pip install networkit
+    $ pip install tabulate
+    $ conda install seaborn
 
 
 Conda commands to create the Python2.7 environment
