@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 usage='"
-Usage: ${progname} [--dry-run] [-v] groups-file
+Usage: ${progname} [--dry-run] [--prefix=pre] [-v] groups-file
 
 Description
     Read groups-file for a list of group_id values (first token on each line).
@@ -9,18 +9,25 @@ Description
     in big_data/members_in_group_/ using the big_data/stash_it.sh program.
 
 Options
-    --dry-run   Just show what would happen.
-    -v          Increase verbosity.
+    --dry-run       Just show what would happen.
+    --prefix=pre    The prefix is the initial path component in front of
+                        the stash name \"members_in_group_\"; (default
+                        ${dflt_prefix}).
+    -v              Increase verbosity.
 "'
 
 progname=$( basename "${0}" )
+progdir=$( cd "$( dirname "${0}" )"/.. && pwd )
 msg () { echo "${progname}:" "${@}"; }
 emsg () { msg "${@}" 1>&2; }
 vecho () { case ${verbose} in (v*) echo "${@}" ;; esac; }
 vvecho () { case ${verbose} in (vv*) echo "${@}" ;; esac; }
 
+dflt_prefix=${progdir}/big_data
+
 unset errs
 unset dry_run
+prefix=${dflt_prefix}
 unset verbose
 while case ${#} in (0) break ;; esac
 do
@@ -31,6 +38,8 @@ do
         eval echo "${usage}"; exit ;;
     (--dry-run)
         dry_run= ;;
+    (--prefix=*)
+        prefix=${1#*=} ;;
     (-*)
         errmsg "unknown flag: ${1}"; errs= ;;
     (*)
@@ -58,6 +67,8 @@ case ${errs+isset} in
     emsg "aborting, run with -h for help"; exit 1 ;;
 esac
 
+mkdir -p "${prefix}"
+
 run ()
 {
     echo "${@}"
@@ -68,8 +79,6 @@ run ()
         "${@}" ;;
     esac
 }
-
-prefix=big_data
 
 awk '{ print $1 }' "${groups_file}" \
 | while read group_id
