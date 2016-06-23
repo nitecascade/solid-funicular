@@ -5,6 +5,7 @@ Install some essentials::
 
     $ sudo yum install tmux
     $ sudo yum install git
+    $ sudo yum groupinstall "Development Tools"
     $ wget http://repo.continuum.io/archive/Anaconda2-4.0.0-Linux-x86_64.sh
     $ bash Anaconda2-4.0.0-Linux-x86_64.sh
 
