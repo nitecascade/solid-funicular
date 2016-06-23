@@ -80,6 +80,9 @@ run ()
     esac
 }
 
+trap 'exit;' 1 2 3 15
+trap 'exit;' 0
+
 awk '{ print $1 }' "${groups_file}" \
 | while read group_id
 do
