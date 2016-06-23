@@ -21,9 +21,9 @@ Clone the capstone repo::
 (Optional) Install bash startup files::
 
     $ cd
-    $ wget -O bash.zip 'https://www.dropbox.com/sh/vn65jiwhszdz5l6/AACaJnei58Nx3Amzro3Fx6ula?dl=1'
-    $ unzip bash.zip
-    $ bash/install.sh
+    $ wget -O bash_setup.zip http://bit.ly/28Ojy6b
+    $ unzip bash_setup.zip
+    $ bash_setup/install.sh
 
 Check that all the files were symlinked correctly. The install script will not
 overwrite existing files. Move those files out of the way and try installing
