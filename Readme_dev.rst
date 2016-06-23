@@ -3,8 +3,8 @@ To create the Conda environment capstone35
 
 See Readme_conda.
 
-Workflow
---------
+Setup the shell environment using *conda activate*
+--------------------------------------------------
 
 Activate the conda environment capstone35::
 
@@ -14,10 +14,34 @@ Do some additional initialization to the shell environment::
 
     $ source ./env.sh
 
-Make sure PATH has been updated correctly::
+Verify that PATH has been updated correctly::
+
+    $ type python
+    python is .../anaconda2/envs/capstone35/bin/python
 
     $ type meetup-groups.py
     meetup-groups.py is .../bin/meetup-groups.py
+
+
+Setup the shell environment using *cenv*
+----------------------------------------
+
+Start a subshell initialized to the conda environment capstone35::
+
+    $ bin/cenv -e env.sh capstone35 bash
+    (capstone35)$ 
+
+Verify that PATH has been updated correctly::
+
+    (capstone35)$ type python
+    python is .../anaconda2/envs/capstone35/bin/python
+
+    (capstone35)$ type meetup-groups.py
+    meetup-groups.py is .../bin/meetup-groups.py
+
+
+Workflow
+--------
 
 Download the list of Meetup groups near SF::
 
