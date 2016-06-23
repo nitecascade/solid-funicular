@@ -2,7 +2,7 @@
 
 usage='"
 Usage: ${progname} -h
-       ${progname} [-e env-file] conda-name [cmd [args]]
+       ${progname} [-e env-file] [--prompt] [-v] conda-name [cmd [args]]
 
 Description
     Start a subshell and activate the named conda environment from it. Without
@@ -12,6 +12,9 @@ Description
 Args
     -h              Show this help message and exit.
     -e env-file     A shell file to source after setting up the conda env.
+    --prompt        Adjust the prompt when starting an interactive shell;
+                    only needed if usual shell startup files do not do it.
+    -v              Increase verbosity of startup; may be repeated.
     conda-name      Conda environment name.
     cmd             Command to run in the named conda environment.
     args            Args to pass to the command.
@@ -37,9 +40,13 @@ Example
 progname=$( basename "${0}" )
 msg () { echo "${progname}:" "${@}"; }
 errmsg () { msg "${@}" 2>&1; }
+vecho () { case ${verbose} in (v*) echo "${@}" ;; esac; }
+vvecho () { case ${verbose} in (vv*) echo "${@}" ;; esac; }
 
 unset errs
 unset env_file
+unset verbose
+unset prompt
 while case ${#} in (0) break ;; esac
 do
     case ${1} in
@@ -49,6 +56,10 @@ do
         shift; env_file=${1} ;;
     (-h|--help)
         eval echo "${usage}"; exit ;;
+    (--prompt)
+        prompt= ;;
+    (-v)
+        verbose=v${verbose} ;;
     (-*)
         errmsg "unknown flag: ${1}"; errs= ;;
     (*)
@@ -88,24 +99,47 @@ export CONDA_NAME
 [ -f ~/.bashrc ] && source ~/.bashrc
 '
 
-# When there is a cmd run it from this script inside the conda env.
+# When there is a cmd, run it from this script inside the conda env.
 cmd_script='
 '"${preamble}"'
 "${@}"
 exit
 '
 
-# When there is a no cmd start an interactive shell inside the conda env.
-rcfile_nocmd='
+# When there is no cmd, start an interactive shell inside the conda env
+# and adjust PS1.
+rcfile_nocmd_prompt='
 '"${preamble}"'
-PS1="\n(conda ${CONDA_NAME})${PS1}"
+PS1="\n[conda: ${CONDA_NAME}]${PS1}"
+'
+
+# When there is no cmd, start an interactive shell inside the conda env
+# but do not adjust PS1.
+rcfile_nocmd_noprompt='
+'"${preamble}"'
 '
 
 case ${#} in
 (0)
     # There was no command.
-    exec bash --rcfile <( echo "${rcfile_nocmd}" ) -i ;;
+    vecho "starting interactive shell"
+    case ${prompt+isset} in
+    (isset)
+        vecho "adjust PS1"
+        rcfile=${rcfile_nocmd_prompt}
+        ;;
+    (*)
+        vecho "do not adjust PS1"
+        rcfile=${rcfile_nocmd_noprompt}
+        ;;
+    esac
+    vvecho exec bash --rcfile "<(" echo "${rcfile}" ")" -i
+    exec bash --rcfile <( echo "${rcfile}" ) -i
+    ;;
 (*)
     # There was a command.
-    exec bash --norc -c "${cmd_script}" xx "${@}" ;;
+    vecho "running command in subshell"
+    vvecho exec bash --norc -c "${cmd_script}" xx "${@}"
+    exec bash --norc -c "${cmd_script}" xx "${@}"
+    ;;
 esac
