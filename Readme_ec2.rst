@@ -18,6 +18,24 @@ Clone the capstone repo::
     $ cd ~/git/galvanize
     $ git clone https://github.com/nitecascade/solid-funicular.git
 
+Install the AWS keys. You will have to get these from Amazon.com
+or copy them from another host where you saved it::
+
+    $ ls -l ~/.aws/
+    total 20
+    -rwxr-xr-x 1 ec2-user ec2-user 1552 Jun 22 23:29 env_to_json.sh
+    -rw-r--r-- 1 ec2-user ec2-user   55 Jun 22 23:29 makefile
+    -rw-r--r-- 1 ec2-user ec2-user  248 Jun 22 23:29 Readme
+    -rw-r--r-- 1 ec2-user ec2-user  120 Jun 22 23:29 rootkey.env
+    -rw-r--r-- 1 ec2-user ec2-user  178 Jun 22 23:29 rootkey.json
+
+Install the MeetUp.com API key. You will have to get this from Meetup.com
+or copy it from another host where you saved it::
+
+    $ ls -l ~/.meetup/
+    total 8
+    -rw-r--r--  1 fmachi  502  31 Jun 20 12:12 apikey
+
 (Optional) Install bash startup files::
 
     $ cd
