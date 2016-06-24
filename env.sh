@@ -14,10 +14,21 @@ fi
 # Put API key for meetup.com into environment.
 export MEETUP_API_KEY=$( cat ~/.meetup/apikey )
 
+prepend_to_path ()
+# $1 - path env var
+# $2 - dir
+{
+    local path_var=${1?}
+    local dir=${2?}
+    case :${!path_var}: in
+    (*:${dir}:*) ;;
+    (*) eval "${path_var}=\${dir}:\${!path_var}" ;;
+    esac
+    eval export "${path_var}"
+}
+
 # Prepend ./bin to PATH.
-bin=$(pwd)/bin
-case :${PATH}: in
-(*:${bin}:*) ;;
-(*) PATH=${bin}:${PATH} ;;
-esac
-export PATH
+prepend_to_path PATH "$(pwd)/bin"
+
+# Prepend louvain/python-louvain/community to PYTHONPATH.
+prepend_to_path PYTHONPATH "$(pwd)/louvain/python-louvain"
