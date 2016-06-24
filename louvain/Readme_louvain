@@ -1,3 +1,7 @@
+If there is no ./build/ directory here, create one::
+
+    $ mkdir build
+
 Unpack the tarball and move it to ./build/::
 
     $ tar zxvf louvain-generic.tar.gz
