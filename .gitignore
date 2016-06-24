@@ -2,6 +2,7 @@
 big_data/
 nogit/
 really_big_data/
+louvain/build
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
