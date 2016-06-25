@@ -34,10 +34,26 @@ Host line can be used::
 
     $ ssh m4
 
-And when copying files from the local host to the EC2 host, you can use::
+And when copying files from the local host (your laptop, say) to the EC2 host,
+you can use::
 
     $ scp file-on-my-laptop m4:
 
 to copy *file-on-my-laptop* to the home directory on the EC2 host, instead of::
 
     $ scp -i ~/.ssh/ec2-galvanize.pem file-on-my-laptop ec2-user@ec2-54-227-206-115.compute-1.amazonaws.com:
+
+The reverse direction is just as easy::
+
+    $ scp m4:file-on-ec2 .
+
+copies the remote file to the current directory on your laptop.
+
+Entire folders (directories) can be copied in either direction::
+
+    $ scp -r folder-on-my-laptop m4:
+    $ scp -r m4:folder-on-ec2 .
+
+There are many other ways to use SSH, some of them quite amazing. It's worth
+your time to learn more about it–but probably not during capstone project
+weeks!
