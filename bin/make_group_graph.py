@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import click
 import json
 import os
 from pprint import pformat
@@ -46,30 +47,58 @@ def gen_group_id_and_member_ids(stash_root):
         yield group_id, member_ids
 
 
-stash_root = sys.argv[1]
+def gen_edges(stash_root):
 
-# Build a dict containing all the group_ids as keys, with the corresponding
-# member_id set as the value.
+    # Build a dict containing all the group_ids as keys, with the corresponding
+    # member_id set as the value.
 
-node_data = dict()
-gen = gen_group_id_and_member_ids(stash_root)
-for group_id, member_ids in gen:
-    node_data[group_id] = member_ids
+    node_data = dict()
+    gen = gen_group_id_and_member_ids(stash_root)
+    for group_id, member_ids in gen:
+        node_data[group_id] = member_ids
 
-# The nodes of the graph are the group_ids. Two nodes are connected with an
-# edge if they have at least one member_id in common. Generate all node pairs
-# where the intersection of their member_id sets is non-empty. The output
-# consists of the edge (node1, node2) along with the edge weight (the number
-# of member_ids those two nodes have in common.
+    # The nodes of the graph are the group_ids. Two nodes are connected with an
+    # edge if they have at least one member_id in common. Generate all unique
+    # undirected edges where the intersection of their member_id sets is
+    # non-empty.  The output consists of the node pair (node1, node2) along
+    # with the edge weight (the number of member_ids those two nodes have in
+    # common.
 
-for n1 in node_data:
-    for n2 in node_data:
-        if n1 == n2:
-            continue
-        common_member_ids = node_data[n1].intersection(node_data[n2])
-        num_common = len(common_member_ids)
-        if num_common > 0:
-            print("{} {} {}".format(n1, n2, num_common))
+    for n1 in node_data:
+        for n2 in node_data:
+            if n1 > n2:     # Do not emit b--a if a--b was already emitted.
+                continue
+            if n1 == n2:    # Do not emit self loops.
+                continue
+            common_member_ids = node_data[n1].intersection(node_data[n2])
+            num_common = len(common_member_ids)
+            if num_common > 0:
+                yield str(n1), str(n2), int(num_common)
+
+@click.command()
+@click.argument('stash-root', type=click.Path())
+@click.argument('ncol-file', type=click.Path())
+def go(stash_root, ncol_file):
+    """
+    Walk the directory tree starting at stash-root, read each group-member
+    JSON file found, generate the group graph, and finally write the weighted
+    edges of to ncol-file.
+
+    The NCOL output format is:
+
+        \b
+        node1 node2 weight
+        node3 node4 weight
+        ...
+    """
+    print("stash_root: {!r}".format(stash_root))
+    with click.open_file(ncol_file, "w") as ofp:
+        for n1, n2, w in gen_edges(stash_root):
+            print("{} {} {}".format(n1, n2, num_common), file=ofp)
+
+if __name__ == '__main__':
+    go()
+    sys.exit()
 
 # A sample line from the json file for group_id 26434. The data downloaded
 # using the MeetUp API is the dict with key "member" in this structure. It

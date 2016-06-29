@@ -1,6 +1,6 @@
-There are two software packages here:
+There are two software packages in the **python-louvain** world:
 
-1. C implementation of the Louvain Community Detection Algorithm, downloaded
+1. C implementation of the Louvain Community Detection Algorithm, download
    from::
 
     https://sourceforge.net/projects/louvain/
@@ -11,10 +11,14 @@ There are two software packages here:
 
   See also: https://sites.google.com/site/findcommunities/
 
-2. Python module that uses the C implementation. Clone it from the Mercurial
-   repo::
+2. Python module that can (optionally) use the C implementation. Clone it from
+   the Mercurial repo::
 
     $ hg clone https://bitbucket.org/taynaud/python-louvain
+
+   Or install it directly using Pip::
+
+    $ pip install python-louvain
 
 
 To build the C implementation
@@ -41,13 +45,12 @@ The executables are::
     ./build/louvain
 
 
-To install the Python module
-----------------------------
+To install the Python module manually from the Mercurial repo
+-------------------------------------------------------------
 
-Instead of installing *python-louvain* as a Python module, the *env.sh*
-file at the root of this repo adds it to *PYTHONPATH*. This avoids
-installing a third party package into the Conda env that Conda does
-not know about.
+Instead of installing *python-louvain* as a Python module, use the *env.sh*
+file at the root of this repo to add it to *PYTHONPATH*. This avoids installing
+a third party package into the Conda env that Conda/Pip does not know about.
 
 To build the documentation for *python-louvain*
 ...............................................
@@ -89,6 +92,20 @@ To use as a python library::
 
 (Remember that *PYTHONPATH* must contain the path to *python-louvain*, and that
 this is set up by *env.sh* at the root of this repo.)
+
+
+To convert a weighted graph to a binary graph plus a weights file
+-----------------------------------------------------------------
+
+::
+
+    $ louvain/build/louvain-generic/convert -i data/50_nodes.txt -o 50_nodes.bin -w 50_nodes.weights
+    $ louvain/build/louvain-generic/convert -i data/50_nodes.txt -o 50_nodes.bin -w 50_nodes.weights -r 50_nodes.labelling
+
+    $ python louvain/python-louvain/bin/community 50_nodes.bin >50_nodes.tree
+    0.10550981948026186
+
+    $ ./show_partitions.py data/50_nodes.txt
 
 See::
 

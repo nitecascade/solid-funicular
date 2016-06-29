@@ -31,4 +31,8 @@ prepend_to_path ()
 prepend_to_path PATH "$(pwd)/bin"
 
 # Prepend louvain/python-louvain/community to PYTHONPATH.
-prepend_to_path PYTHONPATH "$(pwd)/louvain/python-louvain"
+#prepend_to_path PYTHONPATH "$(pwd)/louvain/python-louvain"
+prepend_to_path PYTHONPATH "$(pwd)/bin"
+
+# Needed for cairocffi import in python.
+export DYLD_FALLBACK_LIBRARY_PATH=/opt/local/lib
