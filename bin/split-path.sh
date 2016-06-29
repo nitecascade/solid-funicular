@@ -2,7 +2,7 @@
 
 # See: http://stackoverflow.com/a/18139746
 # SYNOPSIS
-#   split_path path varDirname [varBasename [varBasenameRoot [varSuffix]]] 
+#   split-path path varDirname [varBasename [varBasenameRoot [varSuffix]]] 
 # DESCRIPTION
 #   Splits the specified input path into its components and returns them by assigning
 #   them to variables with the specified *names*.

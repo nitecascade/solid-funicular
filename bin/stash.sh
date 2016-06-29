@@ -30,7 +30,7 @@ emsg () { msg "${@}" 1>&2; }
 vecho () { case ${verbose} in (v*) echo "${@}" ;; esac; }
 vvecho () { case ${verbose} in (vv*) echo "${@}" ;; esac; }
 
-source split_path.sh
+source split-path.sh
 
 dflt_prefix=$( dirname "${0}" )
 
@@ -80,7 +80,7 @@ parse_filename ()
 # sets: store_name group_id ext first_digit second_digit stash_path
 {
     local file=${1:?"parse_filename: missing file!"}
-    split_path "${file}" parentpath filename basename ext
+    split-path "${file}" parentpath filename basename ext
     store_name=${basename%%[0-9]*}
     group_id=${basename##*_}
     first_digit=${group_id:0:1}
