@@ -9,5 +9,9 @@ infile = sys.argv[1]
 with open(infile) as fp:
     for line in fp:
         data = json.loads(line.strip())
-        print("{id} {name}".format(**data))
-        #print(pprint.pformat(data))
+        member = data["member"]
+        try:
+            print("{id} {name!r}".format(**member))
+        except KeyError as exc:
+            print("KeyError: {}".format(exc))
+            print(pprint.pformat(data))

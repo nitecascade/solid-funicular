@@ -10,23 +10,19 @@ class GroupGraphGen:
         Meetup groups (group_id) and an edge of weight W between two nodes
         indicates the two groups have W members in common.
         
-        The graph file consists of lines with fields::
+        The graph file in NCOL format consists of lines with fields::
 
             group_id1 group_id2 weight
 
-        The edges are undirected, but the graph file may contain two
-        directed edges::
-
-            group_id1 group_id2 weight
-            group_id2 group_id1 weight
-
-        The second edge (where group_id2 >= group_id1) can be filtered out with
-        the method::
+        The edges are undirected. The graph file should not contain the edge (B
+        A W) if it contains the edge (A B W). Such redundant edges can be
+        removed by the method::
 
             .filter_dups()   
 
-        Note that filter_dups() has to store half of the edges (so it can tell
-        when it has seen an edge before).
+        which removes the one that comes lexicographically second. Note that
+        filter_dups() has to save the edges (so it can tell when it has seen an
+        edge before) so it is memory intensive.
 
         This class creates an instance from a generator of edges. When the
         source of the edges is a file, the classmethod::
