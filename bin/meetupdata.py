@@ -6,7 +6,7 @@ from pprint import pformat
 import sys
 
 
-class GroupGidMapper:
+class GroupGidMap:
     def __init__(self, group_file):
         self._file = group_file
         self._group_gid_map = None

@@ -3,7 +3,7 @@
 import click
 import json
 import sys
-from meetupdata import GroupGidMapper
+from meetupdata import GroupGidMap
 
 
 if __name__ == '__main__':
@@ -58,7 +58,7 @@ if __name__ == '__main__':
         print("group_ids_json: {!r}".format(group_ids_json))
         print("group_ids_str: {!r}".format(group_ids_str))
         print("groups_file: {!r}".format(groups_file))
-        gid_map = GroupGidMapper(groups_file)
+        gid_map = GroupGidMap(groups_file)
         gid_map.load()
         print("read {} group names from {!r}".format(
             len(gid_map), gid_map._file))
