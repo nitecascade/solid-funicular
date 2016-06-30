@@ -52,14 +52,12 @@ if __name__ == '__main__':
             help='Field to return (name, members, description).')
     @click.option('--groups-file', 'groups_file', type=click.Path(),
             default="data/groups.txt",
-            help='File of group of group information (.json or .txt.')
+            help='File of group information (.json or .txt.')
     def go(group_ids_file, group_ids_json, group_ids_str, key, groups_file):
         print("group_ids_file: {!r}".format(group_ids_file))
         print("group_ids_json: {!r}".format(group_ids_json))
         print("group_ids_str: {!r}".format(group_ids_str))
         print("groups_file: {!r}".format(groups_file))
-        #gid_map = GroupGidMapper("data/groups.txt")
-        #gid_map = GroupGidMapper("data/groups.json")
         gid_map = GroupGidMapper(groups_file)
         gid_map.load()
         print("read {} group names from {!r}".format(
