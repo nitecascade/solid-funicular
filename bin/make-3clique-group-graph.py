@@ -3,19 +3,21 @@
 from functools import partial
 from itertools import combinations
 import click
+import os
 import random
-from meetupdata import gen_group_id_and_member_ids
+from meetupdata import GroupsData
 
 dflt_seed = None
 dflt_k = 1
 dflt_num = 100
 
 
-def gen_random_3cliques(stash_root, k=dflt_k, n=dflt_num, seed=dflt_seed):
+def gen_random_3cliques(source, k=dflt_k, n=dflt_num, seed=dflt_seed):
     """
-    Generate at most n the edges of the group graph from JSON data stored in
-    a directory stash. Constructs at most n random triangles (3-cliques) where
-    the three nodes of a triangle have at least k members in common.
+    Generate at most n the edges of the group graph from JSON data stored in a
+    directory stash or a file (source extension is ".json"). Constructs at most
+    n random triangles (3-cliques) where the three nodes of a triangle have at
+    least k members in common.
     """
 
     if n == -1:
@@ -27,10 +29,16 @@ def gen_random_3cliques(stash_root, k=dflt_k, n=dflt_num, seed=dflt_seed):
     # Build a dict containing all the group_ids as keys, with the corresponding
     # member_id set as the value.
 
+    ext = os.path.splitext(source)[1]
+    if ext == ".json":
+        g = GroupsData.from_file(source)
+    else:
+        g = GroupsData.from_stash(source)
+
     node_data = dict()
-    gen = gen_group_id_and_member_ids(stash_root)
-    for group_id, member_ids in gen:
-        node_data[group_id] = member_ids
+    for gid in g.get_gids():
+        gdata = g.lookup_gid(gid)
+        node_data[gid] = [_[0] for _ in gdata["members"]]
     print("{} groups".format(len(node_data)))
 
     # The nodes of the graph are the group_ids. Construct triangles (three
@@ -43,40 +51,55 @@ def gen_random_3cliques(stash_root, k=dflt_k, n=dflt_num, seed=dflt_seed):
     edges = set()
     count_tris_found, count_tris_emitted, count_edges_emitted = 0, 0, 0
     node_list = sorted(node_data)
+    null_passes, max_null_passes = 0, 1000
     while count_tris_emitted < n:
+        if null_passes >= max_null_passes:
+            print("quitting: no new edges for {} random samples".format(
+                max_null_passes))
+            break
+        emmited_one = False
         n1, n2, n3 = sample(node_list, 3)
         s = set([n1, n2, n3])
         n1, n3 = min(n1, n2, n3), max(n1, n2, n3)
         n2 = (s - set([n1, n3])).pop()
         count_tris_found += 1
         if n1 > n2:     # Do not emit b--a if a--b was already emitted.
+            null_passes += 1
             continue
         if n1 > n3:     # Do not emit b--a if a--b was already emitted.
+            null_passes += 1
             continue
         if n2 > n3:     # Do not emit b--a if a--b was already emitted.
+            null_passes += 1
             continue
         if n1 == n2:    # Do not emit self loops.
+            null_passes += 1
             continue
         if n1 == n3:    # Do not emit self loops.
+            null_passes += 1
             continue
         if n2 == n3:    # Do not emit self loops.
+            null_passes += 1
             continue
-        common_members_12 = node_data[n1].intersection(node_data[n2])
-        common_members_13 = node_data[n1].intersection(node_data[n3])
-        common_members_23 = node_data[n2].intersection(node_data[n3])
-        common_members_123 = common_members_12.intersection(node_data[n3])
+        common_members_12 = set(node_data[n1]).intersection(set(node_data[n2]))
+        common_members_13 = set(node_data[n1]).intersection(set(node_data[n3]))
+        common_members_23 = set(node_data[n2]).intersection(set(node_data[n3]))
+        common_members_123 = common_members_12.intersection(set(node_data[n3]))
         if len(common_members_123) >= k:
             count_tris_emitted += 1
             if (n1, n2) not in edges:   # Do not emit an edge more than once.
                 count_edges_emitted += 1
+                emmited_one = True
                 yield str(n1), str(n2), len(common_members_12)
                 edges.add((n1, n2))
             if (n1, n3) not in edges:   # Do not emit an edge more than once.
                 count_edges_emitted += 1
+                emmited_one = True
                 yield str(n1), str(n3), len(common_members_13)
                 edges.add((n1, n3))
             if (n2, n3) not in edges:   # Do not emit an edge more than once.
                 count_edges_emitted += 1
+                emmited_one = True
                 yield str(n2), str(n3), len(common_members_23)
                 edges.add((n2, n3))
             if count_tris_emitted % 100 == 0:
@@ -85,15 +108,18 @@ def gen_random_3cliques(stash_root, k=dflt_k, n=dflt_num, seed=dflt_seed):
                 print("{}".format(count_tris_emitted), end="", flush=True)
             if count_tris_emitted >= n:
                 break
+        if not emmited_one:
+            null_passes += 1
     print()
     print("{} edges".format(count_tris_emitted))
 
 
-def gen_3cliques(stash_root, k=dflt_k, n=dflt_num):
+def gen_3cliques(source, k=dflt_k, n=dflt_num):
     """
-    Generate at most n the edges of the group graph from JSON data stored in
-    a directory stash. Constructs at most n triangles (3-cliques) where the
-    three nodes of a triangle have at least k members in common.
+    Generate at most n edges of the group graph from JSON data stored in a
+    directory stash or file (source extension .json). Constructs at most n
+    triangles (3-cliques) where the three nodes of a triangle have at least k
+    members in common.
     """
 
     if n == -1:
@@ -102,10 +128,16 @@ def gen_3cliques(stash_root, k=dflt_k, n=dflt_num):
     # Build a dict containing all the group_ids as keys, with the corresponding
     # member_id set as the value.
 
+    ext = os.path.splitext(source)[1]
+    if ext == ".json":
+        g = GroupsData.from_file(source)
+    else:
+        g = GroupsData.from_stash(source)
+
     node_data = dict()
-    gen = gen_group_id_and_member_ids(stash_root)
-    for group_id, member_ids in gen:
-        node_data[group_id] = member_ids
+    for gid in g.get_gids():
+        gdata = g.lookup_gid(gid)
+        node_data[gid] = [_[0] for _ in gdata["members"]]
     print("{} groups".format(len(node_data)))
 
     # The nodes of the graph are the group_ids. Construct triangles (three
@@ -117,7 +149,6 @@ def gen_3cliques(stash_root, k=dflt_k, n=dflt_num):
     node_list = sorted(node_data)
     count_tris_found, count_tris_emitted, count_edges_emitted = 0, 0, 0
     for n1, n2, n3 in combinations(node_list, 3):
-        print("n1, n2, n3: {} {} {}".format(n1, n2, n3))
         count_tris_found += 1
         if n1 > n2:     # Do not emit b--a if a--b was already emitted.
             continue
@@ -131,11 +162,10 @@ def gen_3cliques(stash_root, k=dflt_k, n=dflt_num):
             continue
         if n2 == n3:    # Do not emit self loops.
             continue
-        common_members_12 = node_data[n1].intersection(node_data[n2])
-        common_members_13 = node_data[n1].intersection(node_data[n3])
-        common_members_23 = node_data[n2].intersection(node_data[n3])
-        common_members_123 = common_members_12.intersection(node_data[n3])
-        print("common members: {}".format(common_members_123))
+        common_members_12 = set(node_data[n1]).intersection(set(node_data[n2]))
+        common_members_13 = set(node_data[n1]).intersection(set(node_data[n3]))
+        common_members_23 = set(node_data[n2]).intersection(set(node_data[n3]))
+        common_members_123 = common_members_12.intersection(set(node_data[n3]))
         if len(common_members_123) >= k:
             count_tris_emitted += 1
             if (n1, n2) not in edges:   # Do not emit an edge more than once.
@@ -164,19 +194,19 @@ def gen_3cliques(stash_root, k=dflt_k, n=dflt_num):
 
 @click.command()
 @click.option("-k", default=dflt_k,
-        help="""Two groups must have at least k members in common to have
-            an edge between them.""")
+        help=("Two groups must have at least k members in common to have"
+            " an edge between them."))
 @click.option("-n", default=dflt_num,
-        help="""Produce at most num edges; use -1 to produce all edges
-            (for --random-sample, -1 just selects the default.""")
+        help=("Produce at most num edges; use -1 to produce all edges"
+            " (for --random-sample, -1 just selects the default."))
 @click.option("--random-sample", is_flag=True,
-        help="""Generate edges randomly. Without this option
-                generates all edges.""")
+        help=("Generate edges randomly. Without this option"
+                " generates all edges."))
 @click.option("--seed", default=dflt_seed,
-        help="""Seed for random number generator.""")
-@click.argument('stash-root', type=click.Path())
+        help="Seed for random number generator.")
+@click.argument('source', "source", type=click.Path())
 @click.argument('ncol-file', type=click.Path())
-def go(k, n, random_sample, seed, stash_root, ncol_file):
+def go(k, n, random_sample, seed, source, ncol_file):
     """
     Walk the directory tree starting at stash-root, read each group-member
     JSON file found, generate the group graph, and finally write the weighted
@@ -189,7 +219,7 @@ def go(k, n, random_sample, seed, stash_root, ncol_file):
         node3 node4 weight
         ...
     """
-    print("stash_root: {!r}".format(stash_root))
+    print("source: {!r}".format(source))
     print("random_sample: {}".format(random_sample))
     print("k: {}".format(k))
     print("n: {}".format(n))
@@ -199,7 +229,7 @@ def go(k, n, random_sample, seed, stash_root, ncol_file):
     else:
         gen = partial(gen_3cliques)
     with click.open_file(ncol_file, "w") as ofp:
-        for n1, n2, w in gen(stash_root, k=k, n=n):
+        for n1, n2, w in gen(source, k=k, n=n):
             print("{} {} {}".format(n1, n2, w), file=ofp)
 
 if __name__ == '__main__':

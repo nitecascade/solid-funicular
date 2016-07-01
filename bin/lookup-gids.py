@@ -58,10 +58,8 @@ if __name__ == '__main__':
         print("group_ids_json: {!r}".format(group_ids_json))
         print("group_ids_str: {!r}".format(group_ids_str))
         print("groups_file: {!r}".format(groups_file))
-        gid_map = GroupGidMap(groups_file)
-        gid_map.load()
-        print("read {} group names from {!r}".format(
-            len(gid_map), gid_map._file))
+        gid_map = GroupGidMap.from_file(groups_file)
+        print("read {} group names from {!r}".format(len(gid_map), groups_file))
         all_values = group_values_gen(
                         group_ids_file=group_ids_file,
                         group_ids_str=group_ids_str,
