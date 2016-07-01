@@ -8,11 +8,14 @@ import random
 from meetupdata import GroupsData
 
 dflt_seed = None
-dflt_k = 1
-dflt_num = 100
+dflt_k = 1      # Number of members two groups must have in common.
+dflt_p = 0.05   # Percent membership each of two groups must share.
+dflt_num = 100  # Number of edges to generate.
+dflt_max_null_passes=10000  # Stop if no random edge after this many trys.
 
 
-def gen_random_3cliques(source, k=dflt_k, n=dflt_num, seed=dflt_seed):
+def gen_random_3cliques(source, k=None, p=None, n=None, seed=None,
+        max_null_passes=None):
     """
     Generate at most n the edges of the group graph from JSON data stored in a
     directory stash or a file (source extension is ".json"). Constructs at most
@@ -20,7 +23,15 @@ def gen_random_3cliques(source, k=dflt_k, n=dflt_num, seed=dflt_seed):
     least k members in common.
     """
 
-    if n == -1:
+    if not k and not p:
+        raise RuntimeError("specify k or p, or both!")
+    if k is None:
+        k = dflt_k
+    if p is None:
+        p = dflt_p
+    if max_null_passes is None:
+        max_null_passes = dflt_max_null_passes
+    if n is None or n < 0:
         n = dflt_num
 
     random.seed(seed)
@@ -38,7 +49,8 @@ def gen_random_3cliques(source, k=dflt_k, n=dflt_num, seed=dflt_seed):
     node_data = dict()
     for gid in g.get_gids():
         gdata = g.lookup_gid(gid)
-        node_data[gid] = [_[0] for _ in gdata["members"]]
+        #node_data[gid] = [_[0] for _ in gdata["members"]]
+        node_data[gid] = gdata["members"]
     print("{} groups".format(len(node_data)))
 
     # The nodes of the graph are the group_ids. Construct triangles (three
@@ -51,7 +63,7 @@ def gen_random_3cliques(source, k=dflt_k, n=dflt_num, seed=dflt_seed):
     edges = set()
     count_tris_found, count_tris_emitted, count_edges_emitted = 0, 0, 0
     node_list = sorted(node_data)
-    null_passes, max_null_passes = 0, 1000
+    null_passes = 0
     while count_tris_emitted < n:
         if null_passes >= max_null_passes:
             print("quitting: no new edges for {} random samples".format(
@@ -81,11 +93,32 @@ def gen_random_3cliques(source, k=dflt_k, n=dflt_num, seed=dflt_seed):
         if n2 == n3:    # Do not emit self loops.
             null_passes += 1
             continue
-        common_members_12 = set(node_data[n1]).intersection(set(node_data[n2]))
-        common_members_13 = set(node_data[n1]).intersection(set(node_data[n3]))
-        common_members_23 = set(node_data[n2]).intersection(set(node_data[n3]))
-        common_members_123 = common_members_12.intersection(set(node_data[n3]))
-        if len(common_members_123) >= k:
+        set_n1 = set(node_data[n1])
+        set_n2 = set(node_data[n2])
+        set_n3 = set(node_data[n3])
+        common_members_12 = set_n1.intersection(set_n2)
+        common_members_13 = set_n1.intersection(set_n3)
+        common_members_23 = set_n2.intersection(set_n3)
+        common_members_123 = common_members_12.intersection(set_n3)
+        k_good_to_go = True
+        p_good_to_go = True
+        if k:
+            num_common_123 = len(common_members_123)
+            if num_common_123 < k:
+                k_good_to_go = False
+        if p:
+            num_common_123 = len(common_members_123)
+            num_common_12 = len(common_members_12)
+            num_common_13 = len(common_members_13)
+            num_common_23 = len(common_members_23)
+            if (
+                    min(num_common_12, num_common_13, num_common_23) == 0
+                    or max(num_common_123/num_common_12,
+                            num_common_123/num_common_13,
+                            num_common_123/num_common_23) < p)
+                ):
+                p_good_to_go = False
+        if k_good_to_go or p_good_to_go:
             count_tris_emitted += 1
             if (n1, n2) not in edges:   # Do not emit an edge more than once.
                 count_edges_emitted += 1
@@ -114,7 +147,7 @@ def gen_random_3cliques(source, k=dflt_k, n=dflt_num, seed=dflt_seed):
     print("{} edges".format(count_tris_emitted))
 
 
-def gen_3cliques(source, k=dflt_k, n=dflt_num):
+def gen_3cliques(source, k=None, p=None, n=None):
     """
     Generate at most n edges of the group graph from JSON data stored in a
     directory stash or file (source extension .json). Constructs at most n
@@ -122,7 +155,13 @@ def gen_3cliques(source, k=dflt_k, n=dflt_num):
     members in common.
     """
 
-    if n == -1:
+    if not k and not p:
+        raise RuntimeError("specify k or p, or both!")
+    if k is None:
+        k = dflt_k
+    if p is None:
+        p = dflt_p
+    if n is None:
         n = dflt_num
 
     # Build a dict containing all the group_ids as keys, with the corresponding
@@ -137,7 +176,8 @@ def gen_3cliques(source, k=dflt_k, n=dflt_num):
     node_data = dict()
     for gid in g.get_gids():
         gdata = g.lookup_gid(gid)
-        node_data[gid] = [_[0] for _ in gdata["members"]]
+        #node_data[gid] = [_[0] for _ in gdata["members"]]
+        node_data[gid] = gdata["members"]
     print("{} groups".format(len(node_data)))
 
     # The nodes of the graph are the group_ids. Construct triangles (three
@@ -162,11 +202,32 @@ def gen_3cliques(source, k=dflt_k, n=dflt_num):
             continue
         if n2 == n3:    # Do not emit self loops.
             continue
-        common_members_12 = set(node_data[n1]).intersection(set(node_data[n2]))
-        common_members_13 = set(node_data[n1]).intersection(set(node_data[n3]))
-        common_members_23 = set(node_data[n2]).intersection(set(node_data[n3]))
-        common_members_123 = common_members_12.intersection(set(node_data[n3]))
-        if len(common_members_123) >= k:
+        set_n1 = set(node_data[n1])
+        set_n2 = set(node_data[n2])
+        set_n3 = set(node_data[n3])
+        common_members_12 = set_n1.intersection(set_n2)
+        common_members_13 = set_n1.intersection(set_n3)
+        common_members_23 = set_n2.intersection(set_n3)
+        common_members_123 = common_members_12.intersection(set_n3)
+        k_good_to_go = True
+        p_good_to_go = True
+        if k:
+            num_common_123 = len(common_members_123)
+            if num_common_123 < k:
+                k_good_to_go = False
+        if p:
+            num_common_123 = len(common_members_123)
+            num_common_12 = len(common_members_12)
+            num_common_13 = len(common_members_13)
+            num_common_23 = len(common_members_23)
+            if (
+                    min(num_common_12, num_common_13, num_common_23) == 0
+                    or max(num_common_123/num_common_12,
+                            num_common_123/num_common_13,
+                            num_common_123/num_common_23) < p)
+                ):
+                p_good_to_go = False
+        if k_good_to_go or p_good_to_go:
             count_tris_emitted += 1
             if (n1, n2) not in edges:   # Do not emit an edge more than once.
                 count_edges_emitted += 1
@@ -184,7 +245,7 @@ def gen_3cliques(source, k=dflt_k, n=dflt_num):
                 print(".", end="", flush=True)
             if count_tris_emitted % 1000 == 0:
                 print("{}".format(count_tris_emitted), end="", flush=True)
-            if count_tris_emitted >= n:
+            if n >= 0 and count_tris_emitted >= n:
                 break
             
     print()
@@ -193,9 +254,12 @@ def gen_3cliques(source, k=dflt_k, n=dflt_num):
     print("{} edges emitted".format(count_edges_emitted))
 
 @click.command()
-@click.option("-k", default=dflt_k,
+@click.option("-k", type=int,
         help=("Two groups must have at least k members in common to have"
             " an edge between them."))
+@click.option("-p", type=float,
+        help=("Two groups must both have at least p percent members in"
+            " common to have an edge between them."))
 @click.option("-n", default=dflt_num,
         help=("Produce at most num edges; use -1 to produce all edges"
             " (for --random-sample, -1 just selects the default."))
@@ -204,9 +268,11 @@ def gen_3cliques(source, k=dflt_k, n=dflt_num):
                 " generates all edges."))
 @click.option("--seed", default=dflt_seed,
         help="Seed for random number generator.")
+@click.option("--max-null", default=dflt_max_null_passes,
+        help="Stop if no random edge after this many trys.")
 @click.argument('source', "source", type=click.Path())
 @click.argument('ncol-file', type=click.Path())
-def go(k, n, random_sample, seed, source, ncol_file):
+def go(k, p, n, random_sample, seed, max_null, source, ncol_file):
     """
     Walk the directory tree starting at stash-root, read each group-member
     JSON file found, generate the group graph, and finally write the weighted
@@ -220,16 +286,18 @@ def go(k, n, random_sample, seed, source, ncol_file):
         ...
     """
     print("source: {!r}".format(source))
-    print("random_sample: {}".format(random_sample))
+    print("random-sample: {}".format(random_sample))
     print("k: {}".format(k))
+    print("p: {}".format(p))
     print("n: {}".format(n))
+    print("max-null: {}".format(max_null))
     print("seed: {}".format(seed))
     if random_sample:
-        gen = partial(gen_random_3cliques, seed=seed)
+        gen = partial(gen_random_3cliques, seed=seed, max_null_passes=max_null)
     else:
         gen = partial(gen_3cliques)
     with click.open_file(ncol_file, "w") as ofp:
-        for n1, n2, w in gen(source, k=k, n=n):
+        for n1, n2, w in gen(source, k=k, p=p, n=n):
             print("{} {} {}".format(n1, n2, w), file=ofp)
 
 if __name__ == '__main__':

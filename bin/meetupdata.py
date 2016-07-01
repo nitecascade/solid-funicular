@@ -77,9 +77,10 @@ class GroupGidMap:
         """
         Return the value of key for gid.
         """
-        if self._group_gid_map is None:
-            self.load()
-        return self._group_gid_map[gid][key]
+        group = self._group_gid_map.get(gid, None)
+        if group is None:
+            return None
+        return group.get(key, None)
 
     def __getitem__(self, gid):
         """
@@ -101,26 +102,6 @@ class GroupGidMap:
 
     def __contains__(self, item):
         return item in self.group_id_map
-
-
-def gen_group_id_and_file_path(stash_root):
-    """
-    The stash directory contains:
-        stash/
-            members_in_group_/
-                1/2/12345.json
-                1/2/12678.json
-                ...
-    This generator yields:
-        12345, members_in_group_/1/2/12345.json
-        12678, members_in_group_/1/2/12678.json
-    where 12345 is a group_id
-        ...
-    """
-    for dir_name, subdir_list, file_list in os.walk(stash_root):
-        for fname in file_list:
-            group_id = os.path.splitext(fname)[0]
-            yield group_id, os.path.join(dir_name, fname)
 
 
 class GroupsStashData:
@@ -192,14 +173,8 @@ class GroupsFileData:
                 line = line.strip()
                 envelope = json.loads(line)
                 envelope_gid = envelope["gid"]
-                envelope_member = envelope["member"]
-                if self._fields:
-                    member = dict()
-                    for f in self._fields:
-                        member[f] = envelope_member[f]
-                else:
-                    member = envelope_member
-                groups_dict[envelope_gid] = member
+                envelope_member = envelope["members"]
+                groups_dict[envelope_gid] = envelope
         return groups_dict
 
     def lookup_gid(self, gid, fields=None):
@@ -269,6 +244,17 @@ class GroupsData:
                 data = self._groups_data.lookup_gid(gid, fields=fields)
                 print("{}".format(json.dumps(data)), file=gfp)
 
+    def write_member_ids(self, fpath):
+        """
+        Rollup Meetup group member ids per group and write them to a file.
+        """
+        with open(fpath, "w") as gfp:
+            for gid in self._groups_data.get_gids():
+                data = self._groups_data.lookup_gid(gid, fields=["id"])
+                member_ids = [_[0] for _ in data["members"]]
+                d = dict(gid=gid, members=member_ids)
+                print("{}".format(json.dumps(d)), file=gfp)
+
     def lookup_gid(self, gid, fields=None):
         """
         Return a dict containing Meetup group data for a gid.
@@ -282,55 +268,6 @@ class GroupsData:
         Return the list of gids.
         """
         return self._groups_data.get_gids()
-
-
-def gen_group_id_and_member_ids(stash_root):
-    """
-    The stash directory contains:
-        stash/
-            members_in_group_/
-                1/2/12345.json
-                1/2/12678.json
-                ...
-    This generator yields:
-        12345, {"123", "124", "2345", ...}
-        12678, {"567", "2345", ...}
-    where 12345 is a group_id and the set contains the group member_ids
-    """
-    for group_id, fpath in gen_group_id_and_file_path(stash_root):
-        member_ids = set()
-        with open(fpath) as fin:
-            for line in fin:
-                data = json.loads(line)
-                member_ids.add(str(data["member"]["id"]))
-        yield group_id, member_ids
-
-
-def gen_reduced_data(stash_root):
-    """
-    The stash directory contains:
-        stash/
-            members_in_group_/
-                1/2/12345.json
-                1/2/12678.json
-                ...
-    This generator yields JSON objects:
-        {"gid": 12345, "gname": "a group", "mids": ["123", "2345", ...]}
-        {"gid": 12678, "gname": "another group", "mids": ["23", "345", ...]}
-    where mids is a list containing the group member_ids.
-    """
-    for gid, fpath in gen_group_id_and_file_path(stash_root):
-        member_ids = set()
-        with open(fpath) as fin:
-            for line in fin:
-                data = json.loads(line)
-                member_ids.add(str(data["member"]["id"]))
-        data = dict(
-                gid=gid,
-                group_name=group_name,
-                members=list(member_ids),
-                )
-        yield json.dumps(data)
 
 
 # A sample line from the json file for group_id 26434. The data downloaded
