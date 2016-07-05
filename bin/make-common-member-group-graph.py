@@ -2,6 +2,7 @@
 
 from functools import partial
 import click
+import inspect
 from pprint import pformat
 import os
 import random
@@ -120,19 +121,26 @@ def gen_edges_common_members(source, k=None, p=None, n=None):
     if n is None:
         n = dflt_num
 
+    #print("{}: n={}".format(inspect.currentframe().f_code.co_name, n))
+
     # Build a dict containing all the group_ids as keys, with the corresponding
     # member_id set as the value.
 
     ext = os.path.splitext(source)[1]
     if ext == ".json":
-        g = GroupsData.from_file(source, fields=["id"])
+        g = GroupsData.from_file(source, fields=["id", "members"])
     else:
         g = GroupsData.from_stash(source, fields=["id"])
 
     node_data = dict()
     for gid in g.get_gids():
         gdata = g.lookup_gid(gid)
-        node_data[gid] = gdata["members"]
+        try:
+            node_data[gid] = gdata["members"]
+        except KeyError as exc:
+            print("KeyError: {}".format(exc))
+            print("gdata: {}".format(gdata))
+            raise
     print("{} groups".format(len(node_data)))
 
     # The nodes of the graph are the group_ids. Two nodes are connected with an

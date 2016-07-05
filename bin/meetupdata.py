@@ -172,7 +172,7 @@ class GroupsFileData:
             for line in gfp:
                 line = line.strip()
                 envelope = json.loads(line)
-                envelope_gid = envelope["gid"]
+                envelope_gid = envelope["id"]
                 envelope_member = envelope["members"]
                 groups_dict[envelope_gid] = envelope
         return groups_dict
@@ -190,8 +190,14 @@ class GroupsFileData:
             caller_gid_data = gid_data
         else:
             caller_gid_data = dict()
-            for f in fields:
-                caller_gid_data[f] = gid_data[f]
+            try:
+                for f in fields:
+                    caller_gid_data[f] = gid_data[f]
+            except KeyError as exc:
+                print("KeyError: {}".format(exc))
+                print("{}".format(gid_data))
+                print("fields: {}".format(fields))
+                raise
         return caller_gid_data
 
     def get_gids(self):
@@ -221,7 +227,7 @@ class GroupsData:
         Access Meetup group data from a directory stash of JSON files.
         """
         if fields is None:
-            fields = ["id"]
+            fields = ["id", "members"]
         stash_data = GroupsStashData(stash_root=stash_root, fields=fields)
         return cls(groups_data=stash_data, fields=fields)
 
@@ -252,7 +258,7 @@ class GroupsData:
             for gid in self._groups_data.get_gids():
                 data = self._groups_data.lookup_gid(gid, fields=["id"])
                 member_ids = [_[0] for _ in data["members"]]
-                d = dict(gid=gid, members=member_ids)
+                d = dict(id=gid, members=member_ids)
                 print("{}".format(json.dumps(d)), file=gfp)
 
     def lookup_gid(self, gid, fields=None):
