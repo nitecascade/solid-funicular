@@ -2,11 +2,18 @@
 
 import click
 import json
+import os
 import sys
 from meetupdata import GroupGidMap
 
 
 if __name__ == '__main__':
+
+    pwd = os.environ["PWD"]
+    progdir = os.path.dirname(sys.argv[0])
+    progdir_path = os.path.abspath(os.path.join(pwd, progdir))
+    datadir = os.path.abspath(os.path.join(progdir_path, "..", "data"))
+    dflt_groups_file = os.path.join(datadir, "groups.txt")
 
     def gather_group_ids(group_ids_file=None, group_ids_list=None,
             group_ids_json=None, group_ids_str=None):
@@ -51,7 +58,7 @@ if __name__ == '__main__':
     @click.option('--key', 'key', default="name",
             help='Field to return (name, members, description).')
     @click.option('--groups-file', 'groups_file', type=click.Path(),
-            default="data/groups.txt",
+            default=dflt_groups_file,
             help='File of group information (.json or .txt.')
     def go(group_ids_file, group_ids_json, group_ids_str, key, groups_file):
         print("group_ids_file: {!r}".format(group_ids_file))
